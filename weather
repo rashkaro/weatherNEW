@@ -1,0 +1,331 @@
+import pandas as pd
+import numpy as np
+from pandas.tseries.offsets import *
+import datetime
+import datetime as dt
+import matplotlib.pyplot as plt
+import matplotlib
+import plotly.express as px
+import plotly
+matplotlib.style.use('ggplot')
+import matplotlib.dates as mdates
+import cufflinks
+cufflinks.go_offline()
+cufflinks.set_config_file(world_readable=True, theme='pearl', offline=True)
+import plotly.graph_objs as go
+import requests
+
+import pylab
+from datetime import date
+import matplotlib.dates
+#pd.options.display.mpl_style = 'default'
+import seaborn as sns
+import plotly.io as pio
+pio.templates
+pio.templates.default = "plotly_dark"
+
+
+pd.options.display.max_columns = 100
+pd.options.display.max_rows = 50
+plt.style.use('ggplot')
+plt.rcParams['figure.figsize'] = (15, 3)
+plt.rcParams['font.family'] = 'sans-serif'
+
+PLOT_LABEL_FONT_SIZE = 14
+
+
+def search_date(date):
+    d = df[df['date'] == date]['date']
+    t = df[df['date'] == date]['temp']
+    p = df[df['date'] == date]['prec']
+    w = df[df['date'] == date]['wetness']
+    wi = df[df['date'] == date]['wind']
+    sw = df[df['date'] == date]['s_wind']
+    cl = df[df['date'] == date]['col_cloud']
+    nw = df[df['date'] == date]['n_weather']
+    ans = f'{str(d)} температура воздуха: {t}, атмосферное давление: {p}, относительная влажность на высоте 2 метра: {w}, направление ветра (румбы) на высоте 10-12 метров: {wi}, скорость ветра на высоте 10-12 метров: {sw}, общая облачность: {cl}, текущая погода: {nw}.'
+    return ans
+
+
+def val(date='', column=''):
+    x = dm[dm['date'].str.contains(date)][column]
+    y = dm[dm['date'].str.contains(date)][column]
+    if column == 'date':
+        axis_t = x
+        #print('X')
+    else:
+        axis_t = y
+        #print('Y')
+    return axis_t
+
+def formatting(sp):
+    li = []
+    for i in b:
+        k = i.split('-')
+        c = (k[1:])
+        s = ".".join(c)
+        li.append(s)
+    return li
+
+
+
+file = "000000.csv.gz"
+df = pd.read_csv(file, sep=';', skipinitialspace=True, quotechar='"', compression='gzip', error_bad_lines=False,
+                 skiprows=[0, 1, 2, 3, 4, 5, 6], header=None)
+df.drop([3, 4, 8, 9, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29], axis='columns', inplace=True)
+df.set_axis(['date', 'temp', 'prec', 'wetness', 'wind', 's_wind', 'col_cloud', 'n_weather'], axis='columns', inplace=True)
+#print(search_date('03.09.2018 19:00'))
+# отделяем колонку "время" из столбца "дата" в отдельный столбец
+df[['date', 'time']] = df['date'].str.split(' ', expand=True)
+
+# группируем по дате и вычисляем среднее
+
+dt0 = df.groupby(['date'])['temp'].mean() # date & temp
+ds0 = df.groupby(['date'])['s_wind'].mean() # date & s_wind
+
+# из series в dataframe
+dt1 = pd.DataFrame(data=dt0.index, columns=['date'])
+
+
+dt2 = pd.DataFrame(data=dt0.values, columns=['temp'])
+dm = pd.merge(dt1, dt2, left_index=True, right_index=True).sort_values(by = 'date', ascending = True)
+dm['date'] = pd.to_datetime(dm['date'], format='%d.%m.%Y')
+
+
+ds1 = pd.DataFrame(data=ds0.index, columns=['date'])
+ds2 = pd.DataFrame(data=ds0.values, columns=['s_wind'])
+ds = pd.merge(ds1, ds2, left_index=True, right_index=True).sort_values(by = 'date', ascending = True)
+ds['date'] = pd.to_datetime(ds['date'], format='%d.%m.%Y')
+ds = ds.set_index(ds.columns[0]).sort_index()
+
+
+#  график тута...
+
+
+
+#date_keys = dm[(dm['date'].dt.day == 3) & (dm['date'].dt.month == 12)]['date']
+#date_values = dm[(dm['date'].dt.day == 3) & (dm['date'].dt.month == 12)]['temp']
+#TOP_DAYS = date_values.count()
+#plt.bar(np.arange(TOP_DAYS), date_values, color=getColors(TOP_DAYS))
+#plt.xticks(np.arange(TOP_DAYS), date_keys, rotation='vertical', fontsize=12)
+#plt.yticks(fontsize=PLOT_LABEL_FONT_SIZE)
+#plt.legend()
+#plt.xlim()
+
+#plt.title('Температура по датам')
+#plt.ylabel('Температура')
+#plt.xlabel('Дата')
+#plt.show()
+
+
+
+#for years in dm['date'].dt.year.unique():
+    #fig = px.scatter(
+        #data_frame=dm,
+        #x=dm[dm['date'].dt.year == years]['date'].dt.dayofyear,
+        #y=dm[dm['date'].dt.year == years]['temp'],
+        #color=dm[dm['date'].dt.year == years]['date'].dt.year,
+        #size="temp",
+        #title="Температура по датам"
+    #)
+    #fig.show()
+
+
+dm = dm.set_index(dm.columns[0]).sort_index()
+
+
+
+
+#sns.reset_defaults()
+#sns.set(
+    #rc={'figure.figsize':(7,5)},
+    #style="white" # nicer layout
+#)
+
+
+#for years in dm.index.year.unique():
+    #sns.lineplot(
+        #x=dm[dm.index.year == years].index.strftime('%B.%d'),
+        #y=dm[dm.index.year == years]['temp'],
+        #data=dm,
+        #label=years
+    #)
+# параметры hue и size не обязательны
+#sns.despine()
+#plt.show()
+
+
+
+#print(dt.dtypes)
+#print(df.shape)
+#print(dt.columns)
+#df.info()
+#print(df.head(5))
+#print(dt.head(100))
+#print(dt.tail(5))
+
+b = dm.index.format()
+w = formatting(b)
+#dm['dm'] = w
+#g = dm.groupby('dm')
+
+
+
+
+
+fig = go.Figure()
+fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor='LightPink')
+
+colors = ['#006064', '#004d40', '#1b5e20', '#33691e', '#827717', '#f57f17', '#ff6f00', '#e65100', '#bf360c']
+
+dm['color'] = ['#006064' if n == 2012 else '#004d40' if n == 2013 else '#1b5e20' if n == 2014
+               else '#33691e' if n == 2015 else '#827717' if n == 2016 else '#f57f17' if n == 2017
+               else '#ff6f00' if n == 2018 else '#e65100' if n == 2019 else '#bf360c' for n in dm.index.year]
+
+
+# for years in dm.index.year.unique():
+#     a = dm[dm.index.year == years].index.date
+#     x = dm[dm.index.year == years].index.strftime('%B.%d')
+#     y = dm[dm.index.year == years]['temp']
+#     m = dm[dm.index.year == years]['color']
+#     fig.add_trace(go.Scatter(x=x, y=y,
+#                              marker=dict(
+#                                 color=m,
+#                                        ),
+#                               # line=dict(
+#                               #    width=2,
+#                               #        color='#006064',
+#                              #         cmid=[0, 'rgb(0,0,255'],
+#                              #         colorscale=[[0, 'rgb (0,255,255)'], [1, 'rgb (0,0,128)']]
+#                                # ),
+#                             mode='markers',
+#                             name=years,
+#                             text=a))
+#     fig.update_traces(hovertemplate=None)
+#     fig.update_layout(
+#             xaxis_title="Дата",
+#             yaxis_title="Температура (градусы цельсия)",
+#             title_text="График многолетних наблюдений: температура по дням",
+#             xaxis_tickformat='%d %B',
+#             hovermode="x unified")
+# fig.show()
+# fig.write_html("/Users/Sveta/Desktop/Python learning/weather/x0cile.html")
+
+
+
+
+#colors = ['#e8eaf6', '#c5cae9', '#9fa8da', '#7986cb', '#5c6bc0', '#3f51b5', '#3949ab', '#303f9f']
+
+# for years in dm.index.year.unique():
+#     x = dm[dm.index.year == years].index.year
+#     y = dm[dm.index.year == years]['temp'].mean()
+#     print(f'{years} {y}')
+#     plt.bar(x, y)
+#     plt.xticks(rotation='vertical', fontsize=12)
+#     plt.yticks(fontsize=PLOT_LABEL_FONT_SIZE)
+#     plt.legend()
+# plt.xlim()
+#
+# plt.title('Средняя температура по годам')
+# plt.ylabel('Температура')
+# plt.xlabel('Дата')
+# #plt.show()
+
+
+
+
+
+for years in dm.index.year.unique():
+    l = []
+    wn = []
+    spr = []
+    sm = []
+    at = []
+    y1 = dm[(dm.index.month >= 1) & (dm.index.month <= 2) & (dm.index.year == years)]['temp'].mean()
+    y2 = dm[(dm.index.month >= 3) & (dm.index.month <= 5) & (dm.index.year == years)]['temp'].mean()
+    y3 = dm[(dm.index.month >= 6) & (dm.index.month <= 8) & (dm.index.year == years)]['temp'].mean()
+    y4 = dm[(dm.index.month >= 9) & (dm.index.month <= 12) & (dm.index.year == years)]['temp'].mean()
+    wn.append(y1)
+    spr.append(y2)
+    sm.append(y3)
+    at.append(y4)
+    l.append(years)
+    fig.add_trace(go.Bar(x=l, y=wn,
+                         name='winter'))
+    fig.add_trace(go.Bar(x=l, y=spr,
+                         name='spring'))
+    fig.add_trace(go.Bar(x=l, y=sm,
+                         name='summer'))
+    fig.add_trace(go.Bar(x=l, y=at,
+                         name='fall'))
+    fig.update_layout(
+        barmode='relative',
+        xaxis={'categoryorder': 'total descending'},
+        xaxis_title="Год",
+        yaxis_title="Температура (градусы цельсия)",
+        title_text="Средняя температура по годам")
+
+
+
+fig.show()
+
+# график по силе ветра
+
+# for years in dm.index.year.unique():
+#     a = ds[ds.index.year == years].index.date
+#     x = ds[ds.index.year == years].index.strftime('%B.%d')
+#     y = ds[ds.index.year == years]['s_wind']
+#     m = dm[dm.index.year == years]['color']
+#     fig.add_trace(go.Scatter(x=x, y=y,
+#                              #marker=dict(
+#                                 #color=m,
+#                                         #),
+#                              #line=dict(
+#                                 #width=2,
+#                                     #color=m,
+#                                      #cmid=[0, 'rgb(0,0,255'],
+#                                      #colorscale=[[0, 'rgb (0,255,255)'], [1, 'rgb (0,0,128)']]
+#
+#                             mode='lines+markers',
+#                            name=years,
+#                             text=a))
+#     fig.update_traces(hovertemplate=None)
+#     fig.update_layout(
+#             xaxis_title="Дата",
+#             yaxis_title="Скорость ветра (м/с)",
+#             title_text="График многолетних наблюдений: Скорость ветра (м/с)",
+#             xaxis_tickformat='%d %B',
+#             hovermode="x unified")
+# fig.show()
+
+# for years in dm.index.year.unique():
+#     l = []
+#     wn = []
+#     spr = []
+#     sm = []
+#     at = []
+#     y1 = ds[(ds.index.month >= 1) & (ds.index.month <=2) & (ds.index.year == years)]['s_wind'].mean()
+#     y2 = ds[(ds.index.month >= 3) & (ds.index.month <= 5) & (ds.index.year == years)]['s_wind'].mean()
+#     y3 = ds[(ds.index.month >= 6) & (ds.index.month <= 8) & (ds.index.year == years)]['s_wind'].mean()
+#     y4 = ds[(ds.index.month >= 9) & (ds.index.month <= 12) & (ds.index.year == years)]['s_wind'].mean()
+#     wn.append(y1)
+#     spr.append(y2)
+#     sm.append(y3)
+#     at.append(y4)
+#     l.append(years)
+#     fig.add_trace(go.Bar(x=l, y=wn,
+#                    name=years))
+#     fig.add_trace(go.Bar(x=l, y=spr,
+#                         name=years))
+#     fig.add_trace(go.Bar(x=l, y=sm,
+#                         name=years))
+#     fig.add_trace(go.Bar(x=l, y=at,
+#                         name=years))
+#
+#     fig.update_layout(
+#        barmode='relative',
+#        xaxis={'categoryorder': 'total descending'},
+#        xaxis_title="Год",
+#        yaxis_title="Средняя скорость ветра (м/с)",
+#        title_text="Средняя скорость ветра по годам")
+# fig.show()
