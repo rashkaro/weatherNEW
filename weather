@@ -82,21 +82,28 @@ df[['date', 'time']] = df['date'].str.split(' ', expand=True)
 
 dt0 = df.groupby(['date'])['temp'].mean() # date & temp
 ds0 = df.groupby(['date'])['s_wind'].mean() # date & s_wind
+dw0 = df.groupby(['date'])['wetness'].mean() # date & wetness
 
 # из series в dataframe
+# temp
 dt1 = pd.DataFrame(data=dt0.index, columns=['date'])
-
-
 dt2 = pd.DataFrame(data=dt0.values, columns=['temp'])
 dm = pd.merge(dt1, dt2, left_index=True, right_index=True).sort_values(by = 'date', ascending = True)
 dm['date'] = pd.to_datetime(dm['date'], format='%d.%m.%Y')
 
-
+# wind
 ds1 = pd.DataFrame(data=ds0.index, columns=['date'])
 ds2 = pd.DataFrame(data=ds0.values, columns=['s_wind'])
 ds = pd.merge(ds1, ds2, left_index=True, right_index=True).sort_values(by = 'date', ascending = True)
 ds['date'] = pd.to_datetime(ds['date'], format='%d.%m.%Y')
 ds = ds.set_index(ds.columns[0]).sort_index()
+
+#wetness
+dw1 = pd.DataFrame(data=dw0.index, columns=['date'])
+dw2 = pd.DataFrame(data=dw0.values, columns=['wetness'])
+dw = pd.merge(dw1, dw2, left_index=True, right_index=True).sort_values(by = 'date', ascending = True)
+dw['date'] = pd.to_datetime(dw['date'], format='%d.%m.%Y')
+dw = dw.set_index(dw.columns[0]).sort_index()
 
 
 #  график тута...
@@ -182,16 +189,24 @@ dm['color'] = ['#006064' if n == 2012 else '#004d40' if n == 2013 else '#1b5e20'
                else '#33691e' if n == 2015 else '#827717' if n == 2016 else '#f57f17' if n == 2017
                else '#ff6f00' if n == 2018 else '#e65100' if n == 2019 else '#bf360c' for n in dm.index.year]
 
+# График многолетних наблюдений: температура по дням
 
+# month
+
+# print('Введите номер месяца (от 1 до 12):')
+# num = int(input())
+#
+#
+#
 # for years in dm.index.year.unique():
-#     a = dm[dm.index.year == years].index.date
-#     x = dm[dm.index.year == years].index.strftime('%B.%d')
-#     y = dm[dm.index.year == years]['temp']
-#     m = dm[dm.index.year == years]['color']
+#     a = dm[dm.index.year == years].index.date # информация, которая идет в аннотации
+#     x = dm[(dm.index.month == num) & (dm.index.year == years)].index.strftime('%B.%d') # значения по x
+#     y = dm[(dm.index.month == num) & (dm.index.year == years)]['temp'] # значения по y
+#     m = dm[(dm.index.month == num) & (dm.index.year == years)]['color'] # цвет маркеров
 #     fig.add_trace(go.Scatter(x=x, y=y,
-#                              marker=dict(
+#                             marker=dict(
 #                                 color=m,
-#                                        ),
+#                                 size=11),
 #                               # line=dict(
 #                               #    width=2,
 #                               #        color='#006064',
@@ -204,7 +219,38 @@ dm['color'] = ['#006064' if n == 2012 else '#004d40' if n == 2013 else '#1b5e20'
 #     fig.update_traces(hovertemplate=None)
 #     fig.update_layout(
 #             xaxis_title="Дата",
-#             yaxis_title="Температура (градусы цельсия)",
+#             yaxis_title="Температура (°C)",
+#             title_text="График многолетних наблюдений: температура по дням",
+#             xaxis_tickformat='%d %B',
+#             hovermode="x unified")
+# fig.show()
+
+
+# year
+
+
+# for years in dm.index.year.unique():
+#     a = dm[dm.index.year == years].index.date
+#     x = dm[dm.index.year == years].index.strftime('%B.%d')
+#     y = dm[dm.index.year == years]['temp']
+#     m = dm[dm.index.year == years]['color']
+#     fig.add_trace(go.Scatter(x=x, y=y,
+#                             marker=dict(
+#                                 color=m,
+#                                 size=11),
+#                               # line=dict(
+#                               #    width=2,
+#                               #        color='#006064',
+#                              #         cmid=[0, 'rgb(0,0,255'],
+#                              #         colorscale=[[0, 'rgb (0,255,255)'], [1, 'rgb (0,0,128)']]
+#                                # ),
+#                             mode='markers',
+#                             name=years,
+#                             text=a))
+#     fig.update_traces(hovertemplate=None)
+#     fig.update_layout(
+#             xaxis_title="Дата",
+#             yaxis_title="Температура (°C)",
 #             title_text="График многолетних наблюдений: температура по дням",
 #             xaxis_tickformat='%d %B',
 #             hovermode="x unified")
@@ -214,7 +260,8 @@ dm['color'] = ['#006064' if n == 2012 else '#004d40' if n == 2013 else '#1b5e20'
 
 
 
-#colors = ['#e8eaf6', '#c5cae9', '#9fa8da', '#7986cb', '#5c6bc0', '#3f51b5', '#3949ab', '#303f9f']
+
+# matplotlib
 
 # for years in dm.index.year.unique():
 #     x = dm[dm.index.year == years].index.year
@@ -231,47 +278,78 @@ dm['color'] = ['#006064' if n == 2012 else '#004d40' if n == 2013 else '#1b5e20'
 # plt.xlabel('Дата')
 # #plt.show()
 
+# Средняя температура по годам
 
+# for years in dm.index.year.unique():
+#     l = []
+#     s = []
+#     y = dm[dm.index.year == years]['temp'].mean()
+#     m = dm[dm.index.year == years]['color']
+#     s.append(y)
+#     l.append(years)
+#     fig.add_trace(go.Bar(x=l, y=s,
+#                          marker=dict(
+#                              color=m),
+#                          name=years))
+#     fig.update_layout(
+#         barmode='relative',
+#         xaxis={'categoryorder': 'total descending'},
+#         xaxis_title="Год",
+#         yaxis_title="Температура (°C)",
+#         title_text="Средняя температура по годам")
+#
+#
+#
+# fig.show()
 
+# Средняя температура по временам года
 
-
-for years in dm.index.year.unique():
-    l = []
-    wn = []
-    spr = []
-    sm = []
-    at = []
-    y1 = dm[(dm.index.month >= 1) & (dm.index.month <= 2) & (dm.index.year == years)]['temp'].mean()
-    y2 = dm[(dm.index.month >= 3) & (dm.index.month <= 5) & (dm.index.year == years)]['temp'].mean()
-    y3 = dm[(dm.index.month >= 6) & (dm.index.month <= 8) & (dm.index.year == years)]['temp'].mean()
-    y4 = dm[(dm.index.month >= 9) & (dm.index.month <= 12) & (dm.index.year == years)]['temp'].mean()
-    wn.append(y1)
-    spr.append(y2)
-    sm.append(y3)
-    at.append(y4)
-    l.append(years)
-    fig.add_trace(go.Bar(x=l, y=wn,
-                         name='winter'))
-    fig.add_trace(go.Bar(x=l, y=spr,
-                         name='spring'))
-    fig.add_trace(go.Bar(x=l, y=sm,
-                         name='summer'))
-    fig.add_trace(go.Bar(x=l, y=at,
-                         name='fall'))
-    fig.update_layout(
-        barmode='relative',
-        xaxis={'categoryorder': 'total descending'},
-        xaxis_title="Год",
-        yaxis_title="Температура (градусы цельсия)",
-        title_text="Средняя температура по годам")
-
-
-
-fig.show()
+# for years in dm.index.year.unique():
+#     l = []
+#     wn = []
+#     spr = []
+#     sm = []
+#     at = []
+#     y1 = dm[(dm.index.month >= 1) & (dm.index.month <= 2) & (dm.index.year == years)]['temp'].mean()
+#     y2 = dm[(dm.index.month >= 3) & (dm.index.month <= 5) & (dm.index.year == years)]['temp'].mean()
+#     y3 = dm[(dm.index.month >= 6) & (dm.index.month <= 8) & (dm.index.year == years)]['temp'].mean()
+#     y4 = dm[(dm.index.month >= 9) & (dm.index.month <= 12) & (dm.index.year == years)]['temp'].mean()
+#     m = dm[dm.index.year == years]['color']
+#     wn.append(y1)
+#     spr.append(y2)
+#     sm.append(y3)
+#     at.append(y4)
+#     l.append(years)
+#     fig.add_trace(go.Bar(x=l, y=wn,
+#                          marker=dict(
+#                              color=m),
+#                          name='winter'))
+#     fig.add_trace(go.Bar(x=l, y=spr,
+#                          marker=dict(
+#                              color=m),
+#                          name='spring'))
+#     fig.add_trace(go.Bar(x=l, y=sm,
+#                          marker=dict(
+#                              color=m),
+#                          name='summer'))
+#     fig.add_trace(go.Bar(x=l, y=at,
+#                          marker=dict(
+#                              color=m),
+#                          name='fall'))
+#     fig.update_layout(
+#         barmode='relative',
+#         xaxis={'categoryorder': 'total descending'},
+#         xaxis_title="Год",
+#         yaxis_title="Температура (°C)",
+#         title_text="Средняя температура по временам года")
+#
+#
+#
+# fig.show()
 
 # график по силе ветра
 
-# for years in dm.index.year.unique():
+# for years in ds.index.year.unique():
 #     a = ds[ds.index.year == years].index.date
 #     x = ds[ds.index.year == years].index.strftime('%B.%d')
 #     y = ds[ds.index.year == years]['s_wind']
@@ -298,7 +376,7 @@ fig.show()
 #             hovermode="x unified")
 # fig.show()
 
-# for years in dm.index.year.unique():
+# for years in ds.index.year.unique():
 #     l = []
 #     wn = []
 #     spr = []
@@ -329,3 +407,88 @@ fig.show()
 #        yaxis_title="Средняя скорость ветра (м/с)",
 #        title_text="Средняя скорость ветра по годам")
 # fig.show()
+
+# График влажности
+
+# for years in dw.index.year.unique():
+#     a = dw[dw.index.year == years].index.date
+#     x = dw[dw.index.year == years].index.strftime('%B.%d')
+#     y = dw[dw.index.year == years]['wetness']
+#     m = dm[dm.index.year == years]['color']
+#     fig.add_trace(go.Scatter(x=x, y=y,
+#                              #marker=dict(
+#                                 #color=m,
+#                                         #),
+#                              #line=dict(
+#                                 #width=2,
+#                                     #color=m,
+#                                      #cmid=[0, 'rgb(0,0,255'],
+#                                      #colorscale=[[0, 'rgb (0,255,255)'], [1, 'rgb (0,0,128)']]
+#
+#                             mode='lines+markers',
+#                            name=years,
+#                             text=a))
+#     fig.update_traces(hovertemplate=None)
+#     fig.update_layout(
+#             xaxis_title="Дата",
+#             yaxis_title="Влажность (%)",
+#             title_text="График многолетних наблюдений: Влажность (%)",
+#             xaxis_tickformat='%d %B',
+#             hovermode="x unified")
+# fig.show()
+
+# mean wetness:
+
+# for years in dw.index.year.unique():
+#     l = []
+#     s = []
+#     y = dw[dw.index.year == years]['wetness'].mean()
+#     m = dm[dm.index.year == years]['color']
+#     s.append(y)
+#     l.append(years)
+#     fig.add_trace(go.Bar(x=l, y=s,
+#                          marker=dict(
+#                              color=m),
+#                          name=years))
+#     fig.update_layout(
+#         barmode='relative',
+#         xaxis={'categoryorder': 'total descending'},
+#         xaxis_title="Год",
+#         yaxis_title="Влажность (%)",
+#         title_text="Средняя влажность по годам")
+#
+#
+#
+# fig.show()
+
+for years in dw.index.year.unique():
+    l = []
+    wn = []
+    spr = []
+    sm = []
+    at = []
+    y1 = dw[(dw.index.month >= 1) & (dw.index.month <=2) & (dw.index.year == years)]['wetness'].mean()
+    y2 = dw[(dw.index.month >= 3) & (dw.index.month <= 5) & (dw.index.year == years)]['wetness'].mean()
+    y3 = dw[(dw.index.month >= 6) & (dw.index.month <= 8) & (dw.index.year == years)]['wetness'].mean()
+    y4 = dw[(dw.index.month >= 9) & (dw.index.month <= 12) & (dw.index.year == years)]['wetness'].mean()
+    wn.append(y1)
+    spr.append(y2)
+    sm.append(y3)
+    at.append(y4)
+    l.append(years)
+    fig.add_trace(go.Bar(x=l, y=wn,
+                   name='winter'))
+    fig.add_trace(go.Bar(x=l, y=spr,
+                        name='spring'))
+    fig.add_trace(go.Bar(x=l, y=sm,
+                        name='summer'))
+    fig.add_trace(go.Bar(x=l, y=at,
+                        name='fall'))
+
+    fig.update_layout(
+       barmode='relative',
+       xaxis={'categoryorder': 'total descending'},
+       xaxis_title="Год",
+       yaxis_title="Влажность (%)",
+       title_text="Влажность за сезон")
+fig.show()

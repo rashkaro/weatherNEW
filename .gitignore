@@ -1,3 +1,4 @@
 # Project exclude paths
 /plotly4.9/
 /venv/
+/.idea/
